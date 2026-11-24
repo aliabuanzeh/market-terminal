@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Market Terminal</title>
+<meta name="description" content="Ali's live US market terminal — charts, heatmap, breaking news and macro.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230b1114'/><path d='M6 22l6-7 5 4 9-11' stroke='%233ddc84' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b0d;--panel:#0e161a;--panel2:#121d22;--ink:#e8eef0;--mute:#8a9aa1;--rule:#1c2a31;--teal:#4fc1c7;--up:#3ddc84;--dn:#ff6b61;--amb:#f0b549;--r:16px}
+[data-theme=light]{--bg:#f3f6f7;--panel:#ffffff;--panel2:#f4f7f8;--ink:#11161a;--mute:#5b666d;--rule:#e1e7ea;--teal:#0b6e75;--up:#127a3a;--dn:#c0261c;--amb:#8a5a00}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,sans-serif}
+body{background:radial-gradient(1200px 500px at 10% -10%,rgba(79,193,199,.10),transparent 60%),radial-gradient(900px 400px at 100% 0,rgba(61,220,132,.06),transparent 60%),var(--bg);min-height:100vh}
+a{color:var(--teal)}
+.wrap{max-width:1440px;margin:0 auto;padding:0 max(2.5vw,12px)}
+.mono{font-family:"JetBrains Mono",ui-monospace,monospace}
+/* top bar */
+.top{display:flex;align-items:center;gap:14px;padding:14px 0 10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:18px;letter-spacing:-.01em}
+.brand svg{width:30px;height:30px}
+.status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mute)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--mute)}
+.dot.open{background:var(--up);box-shadow:0 0 0 4px rgba(61,220,132,.15);animation:pulse 2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(61,220,132,0)}}
+.spacer{flex:1}
+.clock{font-size:13px;color:var(--mute)}
+.btn{font:600 14px Inter,sans-serif;min-height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.btn.primary{background:var(--teal);border-color:var(--teal);color:#05201f}
+.btn:focus-visible,input:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+/* tape */
+.tape{border-radius:12px;overflow:hidden;border:1px solid var(--rule);background:var(--panel);height:46px}
+/* watchlist */
+.wl{display:flex;gap:8px;align-items:center;margin:14px 0 10px;flex-wrap:wrap}
+.chips{display:flex;gap:6px;overflow-x:auto;flex:1 1 420px;padding-bottom:2px;scrollbar-width:thin}
+.chip{flex:none;font:600 13px Inter,sans-serif;padding:8px 12px;border-radius:999px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px}
+.chip[aria-pressed=true]{background:var(--teal);border-color:var(--teal);color:#05201f}
+.chip .x{opacity:.55;font-weight:400}
+.add{display:flex;gap:6px}
+.add input{font:15px Inter,sans-serif;width:150px;padding:9px 12px;border-radius:10px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);text-transform:uppercase}
+/* grid */
+.grid{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:12px}
+.card{background:var(--panel);border:1px solid var(--rule);border-radius:var(--r);overflow:hidden;display:flex;flex-direction:column}
+.card h2{font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--mute);margin:0;padding:12px 14px 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.card h2 b{color:var(--ink);font-size:15px}
+.w{flex:1;position:relative}
+.h-chart{height:min(66vh,620px);min-height:420px}
+.h-tech{height:420px}.h-info{height:190px}.h-news{height:560px}.h-heat{height:520px}.h-ov{height:520px}.h-cal{height:520px}.h-hot{height:520px}.h-fin{height:520px}
+.side{display:grid;gap:12px;align-content:start}
+.row3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:12px}
+.row2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:12px;margin-top:12px}
+.brief{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px}
+.brief .btn{font-size:13px;min-height:36px}
+.secthead{display:flex;align-items:baseline;justify-content:space-between;margin:26px 0 8px;gap:12px;flex-wrap:wrap}
+.secthead h3{margin:0;font-size:20px;letter-spacing:-.01em}
+.secthead span{font-size:13px;color:var(--mute)}
+footer{color:var(--mute);font-size:12px;padding:22px 0 40px;line-height:1.6}
+.tradingview-widget-container,.tradingview-widget-container__widget{height:100%;width:100%}
+.tradingview-widget-copyright{display:none}
+@media(max-width:1100px){.grid{grid-template-columns:minmax(0,1fr)}.side{grid-template-columns:repeat(2,minmax(0,1fr))}.row3{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.row3>:last-child{grid-column:span 2}}
+@media(max-width:700px){.side,.row2,.row3{grid-template-columns:minmax(0,1fr)}.row3>:last-child{grid-column:auto}.h-chart{height:460px;min-height:0}.clock{display:none}.add input{width:110px}}
+@media(prefers-reduced-motion:reduce){.dot.open{animation:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#0e161a"/><path d="M6 22l6-7 5 4 9-11" stroke="#3ddc84" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Market Terminal</div>
+    <div class="status"><span class="dot" id="dot"></span><span id="mstate">—</span></div>
+    <div class="spacer"></div>
+    <div class="clock mono" id="clock"></div>
+    <button class="btn" id="theme" aria-label="Toggle light or dark theme">◐ Theme</button>
+  </div>
+
+  <div class="tape" id="tape"></div>
+
+  <div class="wl">
+    <div class="chips" id="chips" role="toolbar" aria-label="Watchlist"></div>
+    <form class="add" id="addf"><input id="addq" placeholder="Add ticker" aria-label="Add a ticker, e.g. AMD" maxlength="20"><button class="btn primary">Add</button></form>
+  </div>
+
+  <div class="grid">
+    <section class="card"><h2><b id="symTitle">NVDA</b><span>Hover the chart for the price at any point · switch timeframes top-left</span></h2><div class="w h-chart" id="chart"></div></section>
+    <div class="side">
+      <section class="card"><div class="w h-info" id="info"></div></section>
+      <section class="card"><h2>Technical gauge<span>buy/sell signal from indicators</span></h2><div class="w h-tech" id="tech"></div></section>
+      <section class="card"><h2>Ask Claude</h2><div class="brief" id="brief"></div></section>
+    </div>
+  </div>
+
+  <div class="row2">
+    <section class="card"><h2><b>Breaking news</b><span id="newsLbl">this stock</span></h2><div class="w h-news" id="snews"></div></section>
+    <section class="card"><h2>Company financials</h2><div class="w h-news" id="fin"></div></section>
+  </div>
+
+  <div class="secthead"><h3>Market</h3><span>S&amp;P 500 heatmap sized by market cap · indices, bonds, commodities</span></div>
+  <div class="row2">
+    <section class="card"><div class="w h-heat" id="heat"></div></section>
+    <section class="card"><div class="w h-ov" id="overview"></div></section>
+  </div>
+
+  <div class="secthead"><h3>News &amp; macro</h3><span>Top market stories · economic calendar · today's biggest movers</span></div>
+  <div class="row3">
+    <section class="card"><h2><b>Top market stories</b></h2><div class="w h-news" id="mnews"></div></section>
+    <section class="card"><h2><b>Economic calendar</b><span>US · high impact</span></h2><div class="w h-cal" id="cal"></div></section>
+    <section class="card"><h2><b>Movers</b><span>gainers · losers · most active</span></h2><div class="w h-hot" id="hot"></div></section>
+  </div>
+
+  <footer>
+    Live data and news by TradingView widgets; some exchanges are delayed. Runs entirely in your browser — no server, no AI tokens.
+    For a full research brief on any stock, use the Ask Claude buttons. Not investment advice.
+  </footer>
+</div>
+
+<script>
+{
+const $=id=>document.getElementById(id);
+const DEFAULT=["NVDA","AAPL","MSFT","AMZN","GOOGL","META","TSLA","AMD","SPY","QQQ"];
+const ALIAS={SPY:"AMEX:SPY",QQQ:"NASDAQ:QQQ",DIA:"AMEX:DIA",IWM:"AMEX:IWM",BTC:"BITSTAMP:BTCUSD",GOLD:"OANDA:XAUUSD",OIL:"TVC:USOIL",US10Y:"TVC:US10Y",VIX:"TVC:VIX"};
+const tv=s=>s.includes(':')?s:(ALIAS[s]||s);
+let wl,sel,theme;
+try{wl=JSON.parse(localStorage.getItem('mt_wl'))||DEFAULT;sel=localStorage.getItem('mt_sel')||wl[0];theme=localStorage.getItem('mt_theme')}catch(e){wl=DEFAULT;sel=wl[0]}
+if(!theme)theme=matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+const save=()=>{try{localStorage.setItem('mt_wl',JSON.stringify(wl));localStorage.setItem('mt_sel',sel);localStorage.setItem('mt_theme',theme)}catch(e){}};
+
+function embed(el,name,cfg){
+  el.innerHTML='';
+  const box=document.createElement('div');box.className='tradingview-widget-container';
+  const inner=document.createElement('div');inner.className='tradingview-widget-container__widget';box.appendChild(inner);
+  const s=document.createElement('script');s.type='text/javascript';s.async=true;
+  s.src=`https://s3.tradingview.com/external-embedding/embed-widget-${name}.js`;
+  s.innerHTML=JSON.stringify(Object.assign({colorTheme:theme,isTransparent:true,locale:"en"},cfg));
+  box.appendChild(s);el.appendChild(box);
+}
+
+function renderChips(){
+  $('chips').innerHTML=wl.map(s=>`<button class="chip" data-s="${s}" aria-pressed="${s===sel}">${s}<span class="x" data-del="${s}" title="Remove ${s}" aria-label="Remove ${s}">×</span></button>`).join('');
+}
+function renderSymbol(){
+  const t=tv(sel);$('symTitle').textContent=sel;$('newsLbl').textContent=sel;
+  embed($('chart'),'advanced-chart',{autosize:true,symbol:t,interval:"D",timezone:"America/New_York",theme,style:"1",backgroundColor:theme==='dark'?"rgba(14,22,26,1)":"rgba(255,255,255,1)",gridColor:theme==='dark'?"rgba(28,42,49,0.6)":"rgba(225,231,234,0.8)",allow_symbol_change:false,hide_side_toolbar:false,withdateranges:true,details:false,calendar:false,studies:["STD;MA%Ribbon"],support_host:"https://www.tradingview.com"});
+  embed($('info'),'symbol-info',{symbol:t,width:"100%"});
+  embed($('tech'),'technical-analysis',{interval:"1D",width:"100%",height:"100%",symbol:t,showIntervalTabs:true,displayMode:"single"});
+  embed($('snews'),'timeline',{feedMode:"symbol",symbol:t,displayMode:"regular",width:"100%",height:"100%"});
+  embed($('fin'),'financials',{symbol:t,displayMode:"regular",width:"100%",height:"100%"});
+  const q=encodeURIComponent;
+  const asks=[[`Full brief on ${sel}`,`Brief me on ${sel}: use live data and news, bull vs bear case, rates and Fed exposure, catalysts, with sources.`],
+    [`${sel}: what moved it today?`,`What moved ${sel} today and why? Use live data and sources.`],
+    [`${sel} vs peers`,`Compare ${sel} with its closest peers on growth, valuation and momentum, with live data and sources.`]];
+  $('brief').innerHTML=asks.map(a=>`<a class="btn" target="_blank" rel="noopener" href="https://claude.ai/new?q=${q(a[1])}">${a[0]} ↗</a>`).join('');
+  save();
+}
+function renderStatic(){
+  embed($('tape'),'ticker-tape',{symbols:[
+    {proName:"FOREXCOM:SPXUSD",title:"S&P 500"},{proName:"FOREXCOM:NSXUSD",title:"Nasdaq 100"},{proName:"FOREXCOM:DJI",title:"Dow"},
+    {proName:"TVC:VIX",title:"VIX"},{proName:"TVC:US10Y",title:"US 10Y"},{proName:"TVC:DXY",title:"Dollar"},
+    {proName:"TVC:USOIL",title:"WTI"},{proName:"OANDA:XAUUSD",title:"Gold"},{proName:"BITSTAMP:BTCUSD",title:"Bitcoin"},
+    ...wl.filter(s=>!['SPY','QQQ'].includes(s)).map(s=>({proName:tv(s),title:s}))],showSymbolLogo:true,displayMode:"adaptive"});
+  embed($('heat'),'stock-heatmap',{exchanges:[],dataSource:"SPX500",grouping:"sector",blockSize:"market_cap_basic",blockColor:"change",hasTopBar:true,isDataSetEnabled:false,isZoomEnabled:true,hasSymbolTooltip:true,isMonoSize:false,width:"100%",height:"100%"});
+  embed($('overview'),'market-overview',{dateRange:"1D",showChart:true,width:"100%",height:"100%",showSymbolLogo:true,showFloatingTooltip:true,
+    plotLineColorGrowing:"rgba(61,220,132,1)",plotLineColorFalling:"rgba(255,107,97,1)",gridLineColor:"rgba(0,0,0,0)",scaleFontColor:theme==='dark'?"#8a9aa1":"#5b666d",
+    belowLineFillColorGrowing:"rgba(61,220,132,0.12)",belowLineFillColorFalling:"rgba(255,107,97,0.12)",belowLineFillColorGrowingBottom:"rgba(61,220,132,0)",belowLineFillColorFallingBottom:"rgba(255,107,97,0)",symbolActiveColor:"rgba(79,193,199,0.12)",
+    tabs:[
+     {title:"Indices",symbols:[{s:"FOREXCOM:SPXUSD",d:"S&P 500"},{s:"FOREXCOM:NSXUSD",d:"Nasdaq 100"},{s:"FOREXCOM:DJI",d:"Dow 30"},{s:"AMEX:IWM",d:"Russell 2000 (IWM)"},{s:"TVC:VIX",d:"VIX"}]},
+     {title:"Rates",symbols:[{s:"TVC:US02Y",d:"US 2Y yield"},{s:"TVC:US10Y",d:"US 10Y yield"},{s:"TVC:US30Y",d:"US 30Y yield"},{s:"NASDAQ:TLT",d:"20Y+ Treasuries (TLT)"},{s:"AMEX:HYG",d:"High yield (HYG)"}]},
+     {title:"Sectors",symbols:[{s:"AMEX:XLK",d:"Tech"},{s:"AMEX:XLF",d:"Financials"},{s:"AMEX:XLE",d:"Energy"},{s:"AMEX:XLV",d:"Health"},{s:"AMEX:XLY",d:"Discretionary"},{s:"AMEX:XLP",d:"Staples"},{s:"AMEX:XLU",d:"Utilities"},{s:"AMEX:XLI",d:"Industrials"}]},
+     {title:"Macro",symbols:[{s:"TVC:DXY",d:"Dollar index"},{s:"TVC:USOIL",d:"WTI crude"},{s:"OANDA:XAUUSD",d:"Gold"},{s:"BITSTAMP:BTCUSD",d:"Bitcoin"},{s:"FX:EURUSD",d:"EUR/USD"},{s:"FX:GBPUSD",d:"GBP/USD"}]}]});
+  embed($('mnews'),'timeline',{feedMode:"market",market:"stock",displayMode:"regular",width:"100%",height:"100%"});
+  embed($('cal'),'events',{width:"100%",height:"100%",importanceFilter:"0,1",countryFilter:"us"});
+  embed($('hot'),'hotlists',{exchange:"US",dateRange:"1D",showChart:true,width:"100%",height:"100%",showSymbolLogo:true,showFloatingTooltip:true,
+    plotLineColorGrowing:"rgba(61,220,132,1)",plotLineColorFalling:"rgba(255,107,97,1)",gridLineColor:"rgba(0,0,0,0)",
+    belowLineFillColorGrowing:"rgba(61,220,132,0.12)",belowLineFillColorFalling:"rgba(255,107,97,0.12)",belowLineFillColorGrowingBottom:"rgba(61,220,132,0)",belowLineFillColorFallingBottom:"rgba(255,107,97,0)",symbolActiveColor:"rgba(79,193,199,0.12)"});
+}
+function applyTheme(){document.documentElement.dataset.theme=theme}
+
+$('chips').addEventListener('click',e=>{
+  const d=e.target.closest('[data-del]');
+  if(d){e.stopPropagation();wl=wl.filter(s=>s!==d.dataset.del);if(!wl.length)wl=[...DEFAULT];if(!wl.includes(sel))sel=wl[0];renderChips();renderSymbol();renderStatic();return}
+  const b=e.target.closest('.chip');if(b){sel=b.dataset.s;renderChips();renderSymbol()}});
+$('addf').addEventListener('submit',e=>{e.preventDefault();const v=$('addq').value.trim().toUpperCase().replace(/[^A-Z0-9:.\-]/g,'');if(!v)return;if(!wl.includes(v))wl.push(v);sel=v;$('addq').value='';renderChips();renderSymbol();renderStatic()});
+$('theme').addEventListener('click',()=>{theme=theme==='dark'?'light':'dark';applyTheme();save();renderSymbol();renderStatic()});
+
+// NYSE status + clock
+const HOL=["2026-11-26","2026-12-25","2027-01-01","2027-01-18","2027-02-15","2027-03-26","2027-05-31","2027-06-18","2027-07-05","2027-09-06","2027-11-25","2027-12-24"];
+const EARLY=["2026-11-27","2026-12-24","2027-11-26"];
+function tick(){
+  const now=new Date();
+  const ny=new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const ymd=`${ny.getFullYear()}-${String(ny.getMonth()+1).padStart(2,'0')}-${String(ny.getDate()).padStart(2,'0')}`;
+  const m=ny.getHours()*60+ny.getMinutes(),wd=ny.getDay();
+  const close=EARLY.includes(ymd)?13*60:16*60;
+  let st;
+  if(wd===0||wd===6||HOL.includes(ymd))st='Market closed';
+  else if(m>=570&&m<close)st='Market open';
+  else if(m>=240&&m<570)st='Pre-market';
+  else if(m>=close&&m<20*60)st='After hours';
+  else st='Market closed';
+  $('mstate').textContent=st;$('dot').className='dot'+(st==='Market open'?' open':'');
+  $('clock').textContent=`NY ${ny.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})} · UK ${now.toLocaleTimeString('en-GB',{timeZone:'Europe/London',hour:'2-digit',minute:'2-digit'})}`;
+}
+tick();setInterval(tick,15000);
+
+applyTheme();renderChips();renderSymbol();renderStatic();
+}
+</script>
+</body></html>
